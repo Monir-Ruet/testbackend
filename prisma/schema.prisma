@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  email          String?
+  email_verified Boolean
+  password       String?
+  mobile_number  String?
+  image          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  post           post[]
+  role           role?    @default(BASIC)
+  accountId      String?  @db.ObjectId
+  Account        account?
+
+  @@unique([email])
+}
+
+model account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @unique @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+  user              user    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+enum role {
+  BASIC
+  ADMIN
+}
+
+model post {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  titleId   String   @unique
+  title     String
+  body      String
+  tags      String[]
+  published Boolean  @default(false)
+  priority  Int      @default(1)
+  author    user?    @relation(fields: [userId], references: [id])
+  userId    String?  @db.ObjectId
+  subject   subject  @relation(fields: [subjectId], references: [id])
+  subjectId String   @db.ObjectId
+}
+
+model subject {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  name  String
+  title String @unique
+  post  post[]
+}
